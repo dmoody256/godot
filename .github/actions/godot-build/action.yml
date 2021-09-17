@@ -33,4 +33,5 @@ runs:
       run: |
         echo "Building with flags:" ${{ env.SCONSFLAGS }}
         scons p=${{ inputs.platform }} target=${{ inputs.target }} tools=${{ inputs.tools }} tests=${{ inputs.tests }} --jobs=2 ${{ env.SCONSFLAGS }}
+        ${{ env.NINJA }}
         ls -l bin/
