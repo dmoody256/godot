@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-EnsureSConsVersion(3, 0, 0)
+EnsureSConsVersion(4, 2, 0)
 EnsurePythonVersion(3, 5)
 
 # System
@@ -11,6 +11,8 @@ import pickle
 import sys
 import time
 from collections import OrderedDict
+
+import SCons
 
 # Local
 import methods
@@ -123,6 +125,7 @@ opts.Add(EnumVariable("float", "Floating-point precision", "default", ("default"
 opts.Add(EnumVariable("optimize", "Optimization type", "speed", ("speed", "size", "none")))
 opts.Add(BoolVariable("production", "Set defaults to build Godot for use in production", False))
 opts.Add(BoolVariable("use_lto", "Use link-time optimization", False))
+opts.Add(BoolVariable("use_ninja", "Generate a ninja file to build.", False))
 
 # Components
 opts.Add(BoolVariable("deprecated", "Enable deprecated features", True))
@@ -192,6 +195,23 @@ opts.Add("LINKFLAGS", "Custom flags for the linker")
 # Update the environment to have all above options defined
 # in following code (especially platform and custom_modules).
 opts.Update(env_base)
+
+if env_base["use_ninja"]:
+    env_base.SetOption("experimental", ["ninja"])
+    env_base["NINJA_DISABLE_AUTO_RUN"] = True
+    env_base.Tool("scons_ninja")
+
+    def ninja_generate_deps(env, target, source, for_signature):
+        dependencies = env.Flatten(
+            [
+                sorted([str(s) for s in SCons.Node.SConscriptNodes]),
+                glob.glob(os.path.join("**", "*.py"), recursive=True),
+            ]
+        )
+
+        return dependencies
+
+    env_base["NINJA_REGENERATE_DEPS"] = ninja_generate_deps
 
 # Platform selection: validate input, and add options.
 
