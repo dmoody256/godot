@@ -5,7 +5,6 @@ on: [push, pull_request]
 env:
   GODOT_BASE_BRANCH: master
   SCONSFLAGS: verbose=yes warnings=extra werror=yes debug_symbols=no module_text_server_fb_enabled=yes
-  NINJA:
 
 concurrency:
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-linux
@@ -39,8 +38,7 @@ jobs:
             bin: "./bin/godot.linuxbsd.tools.64s"
             # Skip 2GiB artifact speeding up action.
             artifact: false
-            env:
-              NINJA: ninja
+            ninja: ninja
 
           - name: Template w/ Mono (target=release, tools=no)
             cache-name: linux-template-mono
