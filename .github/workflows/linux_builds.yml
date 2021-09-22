@@ -28,16 +28,17 @@ jobs:
             bin: "./bin/godot.linuxbsd.opt.tools.64"
             artifact: true
 
-          - name: Editor and sanitizers (target=debug, tools=yes, tests=yes, use_asan=yes, use_ubsan=yes)
+          - name: Editor and sanitizers (target=debug, tools=yes, tests=yes, use_asan=yes, use_ubsan=yes, use_ninja=yes)
             cache-name: linux-editor-sanitizers
             target: debug
             tools: true
             tests: true
-            sconsflags: use_asan=yes use_ubsan=yes
+            sconsflags: use_asan=yes use_ubsan=yes use_ninja=yes
             proj-test: true
             bin: "./bin/godot.linuxbsd.tools.64s"
             # Skip 2GiB artifact speeding up action.
             artifact: false
+            ninja: ninja
 
           - name: Template w/ Mono (target=release, tools=no)
             cache-name: linux-template-mono
