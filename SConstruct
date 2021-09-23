@@ -77,6 +77,7 @@ if "TERM" in os.environ:  # Used for colored output.
 env_base.disabled_modules = []
 env_base.module_version_string = ""
 env_base.msvc = False
+env_base.Tool("iwyu")
 
 env_base.__class__.disable_module = methods.disable_module
 
