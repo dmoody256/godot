@@ -133,10 +133,10 @@ if env["builtin_harfbuzz"]:
             ]
         )
 
-    if env["selected_platform"] == "android" or env["selected_platform"] == "linuxbsd":
+    if env["platform"] == "android" or env["platform"] == "linuxbsd":
         env_harfbuzz.Append(CCFLAGS=["-DHAVE_PTHREAD"])
 
-    if env["selected_platform"] == "javascript":
+    if env["platform"] == "javascript":
         if env["threads_enabled"]:
             env_harfbuzz.Append(CCFLAGS=["-DHAVE_PTHREAD"])
         else:

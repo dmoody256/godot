@@ -6,7 +6,7 @@ def can_build(env, platform):
 
 
 def configure(env):
-    platform = env["selected_platform"]
+    platform = env["platform"]
 
     if platform not in supported_platforms:
         raise RuntimeError("This module does not currently support building for this platform")

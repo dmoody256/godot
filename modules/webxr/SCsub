@@ -3,7 +3,7 @@
 Import("env")
 Import("env_modules")
 
-if env["selected_platform"] == "javascript":
+if env["platform"] == "javascript":
     env.AddJSLibraries(["native/library_godot_webxr.js"])
     env.AddJSExterns(["native/webxr.externs.js"])
 
