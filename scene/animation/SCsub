@@ -10,7 +10,6 @@ thirdparty_obj = []
 env_thirdparty = env.Clone()
 env_thirdparty.disable_warnings()
 env_thirdparty.VariantDir("misc", env.Dir("#thirdparty/misc/"), duplicate=0)
-env_thirdparty.add_source_files(thirdparty_obj, ["misc/easing_equations.cpp"])
 env.scene_sources += thirdparty_obj
 
 # Godot source files

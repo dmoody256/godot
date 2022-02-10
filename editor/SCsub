@@ -82,6 +82,7 @@ if env["tools"]:
         Action(editor_builders.make_doc_header, "Generating documentation header."),
     )
 
+
     # Editor interface and class reference translations incur a significant size
     # cost for the editor binary (see godot-proposals#3421).
     # To limit it, we only include translations with a high enough completion
@@ -124,8 +125,8 @@ if env["tools"]:
     flist = editor_env.Glob("#thirdparty/fonts/*.ttf") + editor_env.Glob("#thirdparty/fonts/*.otf")
     editor_env.FontHeader("builtin_fonts.gen.h", sorted(flist))
 
-    env.add_source_files(env.editor_sources, "*.cpp")
-    env.add_source_files(env.editor_sources, "register_exporters.gen.cpp")
+    editor_env.add_source_files(env.editor_sources, "*.cpp")
+    editor_env.add_source_files(env.editor_sources, "register_exporters.gen.cpp")
 
     SConscript("debugger/SCsub", duplicate=0)
     SConscript("fileserver/SCsub", duplicate=0)

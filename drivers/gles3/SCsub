@@ -4,4 +4,5 @@ Import("env")
 
 env.add_source_files(env.drivers_sources, "*.cpp")
 
-SConscript("shaders/SCsub")
+SConscript("shaders/SCsub", duplicate=0)
+env.Append(CPPPATH=env.Dir('.'))

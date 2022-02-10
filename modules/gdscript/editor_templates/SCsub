@@ -4,6 +4,8 @@ Import("env")
 
 import editor.template_builders as build_template_gd
 
+env_editor_templates = env.Clone()
+
 env["BUILDERS"]["MakeGDTemplateBuilder"] = Builder(
     action=Action(build_template_gd.make_templates, "Generating GDScript templates header."),
     suffix=".h",
@@ -11,6 +13,6 @@ env["BUILDERS"]["MakeGDTemplateBuilder"] = Builder(
 )
 
 # Template files
-templates_sources = Glob("*/*.gd")
+templates_sources = env_editor_templates.Glob("*/*.gd")
 
 env.Alias("editor_template_gd", [env.MakeGDTemplateBuilder("templates.gen.h", templates_sources)])

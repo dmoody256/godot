@@ -26,7 +26,7 @@ if env["builtin_miniupnpc"]:
         "receivedata.c",
         "addr_is_reserved.c",
     ]
-    thirdparty_sources = ["miniupnpc/miniupnpc/" + file for file in thirdparty_sources]
+    thirdparty_sources = ["miniupnpc/src/" + file for file in thirdparty_sources]
 
     env_upnp.Prepend(CPPPATH=[thirdparty_dir + "include"])
     env_upnp.Append(CPPDEFINES=["MINIUPNP_STATICLIB"])

@@ -7,6 +7,7 @@ import sys
 del sys.modules['editor']
 from editor.icons import editor_icons_builders
 
+env_icons = env.Clone()
 
 env["BUILDERS"]["MakeEditorIconsBuilder"] = Builder(
     action=Action(editor_icons_builders.make_editor_icons_action, "Generating editor icons header."),
@@ -15,14 +16,14 @@ env["BUILDERS"]["MakeEditorIconsBuilder"] = Builder(
 )
 
 # Editor's own icons
-icon_sources = Glob("*.svg")
+icon_sources = env_icons.Glob("*.svg")
 
 # Module icons
 for path in env.module_icons_paths:
     if not os.path.isabs(path):
-        icon_sources += Glob("#" + path + "/*.svg")  # Built-in.
+        icon_sources += env_icons.Glob("#" + path + "/*.svg")  # Built-in.
     else:
-        icon_sources += Glob(path + "/*.svg")  # Custom.
+        icon_sources += env_icons.Glob(path + "/*.svg")  # Custom.
 
 env.Alias("editor_icons", [env.MakeEditorIconsBuilder("editor_icons.gen.h", icon_sources)])
 editor_env.Append(CPPPATH=[env.Dir(".")])

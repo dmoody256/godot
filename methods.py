@@ -126,13 +126,15 @@ def update_version(env, module_version_string=""):
             githash = head
 
     env.Textfile(
-        "core/version_hash.gen.cpp",
+        "version_hash.gen.cpp",
         [
             "/* THIS FILE IS GENERATED DO NOT EDIT */",
             '#include "core/version.h"',
             f'const char *const VERSION_HASH = "{githash}";'
         ],
     )
+
+
 
 
 def parse_cg_file(fname, uniforms, sizes, conditionals):
