@@ -27,10 +27,11 @@ thirdparty_sources = [
     "vfetchanalyzer.cpp",
     "vfetchoptimizer.cpp",
 ]
-thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+thirdparty_sources = ["meshoptimizer/" + file for file in thirdparty_sources]
 
 env_thirdparty = env_meshoptimizer.Clone()
 env_thirdparty.disable_warnings()
+env_thirdparty.VariantDir("meshoptimizer", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 

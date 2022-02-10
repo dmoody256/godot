@@ -6,20 +6,19 @@ All such functions are invoked in a subprocess on Windows to prevent build flaki
 
 import os
 from io import StringIO
-from platform_methods import subprocess_main
 
 
 # See also `editor/icons/editor_icons_builders.py`.
 def make_default_theme_icons_action(target, source, env):
 
-    dst = target[0]
+    dst = target[0].path
     svg_icons = source
 
     icons_string = StringIO()
 
     for f in svg_icons:
 
-        fname = str(f)
+        fname = str(f.path)
 
         icons_string.write('\t"')
 
@@ -73,6 +72,3 @@ def make_default_theme_icons_action(target, source, env):
     s.close()
     icons_string.close()
 
-
-if __name__ == "__main__":
-    subprocess_main(globals())

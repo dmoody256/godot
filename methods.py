@@ -2,6 +2,7 @@ import os
 import re
 import glob
 import subprocess
+import pathlib
 from collections import OrderedDict
 from collections.abc import Mapping
 from typing import Iterator
@@ -13,7 +14,6 @@ from SCons.Script import Action
 from SCons.Script import ARGUMENTS
 from SCons.Script import Glob
 from SCons.Variables.BoolVariable import _text2bool
-from platform_methods import run_in_subprocess
 
 
 def add_source_files(self, sources, files):
@@ -26,13 +26,7 @@ def add_source_files(self, sources, files):
                 return
             files = [files]
         else:
-            # Exclude .gen.cpp files from globbing, to avoid including obsolete ones.
-            # They should instead be added manually.
-            skip_gen_cpp = "*" in files
-            dir_path = self.Dir(".").abspath
-            files = sorted(glob.glob(dir_path + "/" + files))
-            if skip_gen_cpp:
-                files = [f for f in files if not f.endswith(".gen.cpp")]
+            files = self.Glob(files)
 
     # Add each path as compiled Object following environment (self) configuration
     for path in files:
@@ -76,7 +70,7 @@ def add_module_version_string(self, s):
     self.module_version_string += "." + s
 
 
-def update_version(module_version_string=""):
+def update_version(env, module_version_string=""):
     build_name = "custom_build"
     if os.getenv("BUILD_NAME") != None:
         build_name = str(os.getenv("BUILD_NAME"))
@@ -84,36 +78,36 @@ def update_version(module_version_string=""):
 
     import version
 
-    # NOTE: It is safe to generate this file here, since this is still executed serially
-    f = open("core/version_generated.gen.h", "w")
-    f.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
-    f.write("#ifndef VERSION_GENERATED_GEN_H\n")
-    f.write("#define VERSION_GENERATED_GEN_H\n")
-    f.write('#define VERSION_SHORT_NAME "' + str(version.short_name) + '"\n')
-    f.write('#define VERSION_NAME "' + str(version.name) + '"\n')
-    f.write("#define VERSION_MAJOR " + str(version.major) + "\n")
-    f.write("#define VERSION_MINOR " + str(version.minor) + "\n")
-    f.write("#define VERSION_PATCH " + str(version.patch) + "\n")
     # For dev snapshots (alpha, beta, RC, etc.) we do not commit status change to Git,
     # so this define provides a way to override it without having to modify the source.
     godot_status = str(version.status)
     if os.getenv("GODOT_VERSION_STATUS") != None:
         godot_status = str(os.getenv("GODOT_VERSION_STATUS"))
         print("Using version status '{}', overriding the original '{}'.".format(godot_status, str(version.status)))
-    f.write('#define VERSION_STATUS "' + godot_status + '"\n')
-    f.write('#define VERSION_BUILD "' + str(build_name) + '"\n')
-    f.write('#define VERSION_MODULE_CONFIG "' + str(version.module_config) + module_version_string + '"\n')
-    f.write("#define VERSION_YEAR " + str(version.year) + "\n")
-    f.write('#define VERSION_WEBSITE "' + str(version.website) + '"\n')
-    f.write('#define VERSION_DOCS_BRANCH "' + str(version.docs) + '"\n')
-    f.write('#define VERSION_DOCS_URL "https://docs.godotengine.org/en/" VERSION_DOCS_BRANCH\n')
-    f.write("#endif // VERSION_GENERATED_GEN_H\n")
-    f.close()
 
-    # NOTE: It is safe to generate this file here, since this is still executed serially
-    fhash = open("core/version_hash.gen.cpp", "w")
-    fhash.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
-    fhash.write('#include "core/version.h"\n')
+    env.Textfile(
+        "version_generated.gen.h",
+        [
+            "/* THIS FILE IS GENERATED DO NOT EDIT */",
+            "#ifndef VERSION_GENERATED_GEN_H",
+            "#define VERSION_GENERATED_GEN_H",
+            f'#define VERSION_SHORT_NAME "{str(version.short_name)}"',
+            f'#define VERSION_NAME "{str(version.name)}"',
+            f"#define VERSION_MAJOR {str(version.major)}",
+            f"#define VERSION_MINOR {str(version.minor)}",
+            f"#define VERSION_PATCH {str(version.patch)}",
+            f'#define VERSION_STATUS "{godot_status}"',
+            f'#define VERSION_BUILD "{str(build_name)}"',
+            f'#define VERSION_MODULE_CONFIG "{str(version.module_config) + module_version_string}"',
+            f"#define VERSION_YEAR {str(version.year)}",
+            f'#define VERSION_WEBSITE "{str(version.website)}"',
+            f'#define VERSION_DOCS_BRANCH "{str(version.docs)}"',
+            '#define VERSION_DOCS_URL "https://docs.godotengine.org/en/" VERSION_DOCS_BRANCH',
+            "#endif // VERSION_GENERATED_GEN_H",
+            "",
+        ],
+    )
+
     githash = ""
     gitfolder = ".git"
 
@@ -131,8 +125,14 @@ def update_version(module_version_string=""):
         else:
             githash = head
 
-    fhash.write('const char *const VERSION_HASH = "' + githash + '";\n')
-    fhash.close()
+    env.Textfile(
+        "core/version_hash.gen.cpp",
+        [
+            "/* THIS FILE IS GENERATED DO NOT EDIT */",
+            '#include "core/version.h"',
+            f'const char *const VERSION_HASH = "{githash}";'
+        ],
+    )
 
 
 def parse_cg_file(fname, uniforms, sizes, conditionals):
@@ -252,27 +252,30 @@ def is_module(path):
     return True
 
 
-def write_disabled_classes(class_list):
-    f = open("core/disabled_classes.gen.h", "w")
-    f.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
-    f.write("#ifndef DISABLED_CLASSES_GEN_H\n")
-    f.write("#define DISABLED_CLASSES_GEN_H\n\n")
-    for c in class_list:
-        cs = c.strip()
-        if cs != "":
-            f.write("#define ClassDB_Disable_" + cs + " 1\n")
-    f.write("\n#endif\n")
+def write_disabled_classes(env, class_list):
+
+    env.Textfile(
+        "disabled_classes.gen.h",
+        [
+            "/* THIS FILE IS GENERATED DO NOT EDIT */",
+            "#ifndef DISABLED_CLASSES_GEN_H",
+            "#define DISABLED_CLASSES_GEN_H",
+            "",
+        ]
+        + [f"#define ClassDB_Disable_{cs.strip()} 1" for cs in class_list if cs.strip() != ""]
+        + ["", "#endif"],
+    )
 
 
-def write_modules(modules):
+def write_modules(env):
     includes_cpp = ""
     preregister_cpp = ""
     register_cpp = ""
     unregister_cpp = ""
 
-    for name, path in modules.items():
+    for name, path in env["modules"].items():
         try:
-            with open(os.path.join(path, "register_types.h")):
+            with open(os.path.join(env.Dir("#" + path).abspath, "register_types.h")):
                 includes_cpp += '#include "' + path + '/register_types.h"\n'
                 preregister_cpp += "#ifdef MODULE_" + name.upper() + "_ENABLED\n"
                 preregister_cpp += "#ifdef MODULE_" + name.upper() + "_HAS_PREREGISTER\n"
@@ -288,35 +291,30 @@ def write_modules(modules):
         except OSError:
             pass
 
-    modules_cpp = """// register_module_types.gen.cpp
-/* THIS FILE IS GENERATED DO NOT EDIT */
-#include "register_module_types.h"
-
-#include "modules/modules_enabled.gen.h"
-
-%s
-
-void preregister_module_types() {
-%s
-}
-
-void register_module_types() {
-%s
-}
-
-void unregister_module_types() {
-%s
-}
-""" % (
-        includes_cpp,
-        preregister_cpp,
-        register_cpp,
-        unregister_cpp,
+    env.Textfile(
+        "register_module_types.gen.cpp",
+        [
+            "// register_module_types.gen.cpp",
+            "/* THIS FILE IS GENERATED DO NOT EDIT */",
+            '#include "register_module_types.h"',
+            "",
+            '#include "modules/modules_enabled.gen.h"',
+            "",
+            includes_cpp,
+            "",
+            "void preregister_module_types() {",
+            preregister_cpp,
+            "}",
+            "",
+            "void register_module_types() {",
+            register_cpp,
+            "}",
+            "",
+            "void unregister_module_types() {",
+            unregister_cpp,
+            "}",
+        ],
     )
-
-    # NOTE: It is safe to generate this file here, since this is still executed serially
-    with open("modules/register_module_types.gen.cpp", "w") as f:
-        f.write(modules_cpp)
 
 
 def convert_custom_modules_path(path):
@@ -417,32 +415,24 @@ def use_windows_spawn_fix(self, platform=None):
     self["SPAWN"] = mySpawn
 
 
-def save_active_platforms(apnames, ap):
+def save_active_platforms(env, target, source):
 
-    for x in ap:
-        names = ["logo"]
-        if os.path.isfile(x + "/run_icon.png"):
-            names.append("run_icon")
-
-        for name in names:
-            pngf = open(x + "/" + name + ".png", "rb")
+    for t, s in zip(target, source):
+        with open(s.abspath, "rb") as pngf:
             b = pngf.read(1)
-            str = " /* AUTOGENERATED FILE, DO NOT EDIT */ \n"
-            str += " static const unsigned char _" + x[9:] + "_" + name + "[]={"
+            s_path = pathlib.Path(s.path)
+            data = " static const unsigned char _" + s_path.parts[1] + "_" + os.path.splitext(s_path.name)[0] + "[]={"
             while len(b) == 1:
-                str += hex(ord(b))
+                data += hex(ord(b))
                 b = pngf.read(1)
                 if len(b) == 1:
-                    str += ","
+                    data += ","
 
-            str += "};\n"
+            data += "};\n"
 
-            pngf.close()
-
-            # NOTE: It is safe to generate this file here, since this is still executed serially
-            wf = x + "/" + name + ".gen.h"
-            with open(wf, "w") as pngw:
-                pngw.write(str)
+        with open(t.path, "w") as f:
+            f.write(" /* AUTOGENERATED FILE, DO NOT EDIT */\n")
+            f.write(data)
 
 
 def no_verbose(sys, env):
@@ -828,20 +818,6 @@ def add_program(env, name, sources, **args):
     return program
 
 
-def CommandNoCache(env, target, sources, command, **args):
-    result = env.Command(target, sources, command, **args)
-    env.NoCache(result)
-    return result
-
-
-def Run(env, function, short_message, subprocess=True):
-    output_print = short_message if not env["verbose"] else ""
-    if not subprocess:
-        return Action(function, output_print)
-    else:
-        return Action(run_in_subprocess(function), output_print)
-
-
 def detect_darwin_sdk_path(platform, env):
     sdk_name = ""
     if platform == "osx":
@@ -931,7 +907,7 @@ def show_progress(env):
     node_count = 0
     node_count_max = 0
     node_count_interval = 1
-    node_count_fname = str(env.Dir("#")) + "/.scons_node_count"
+    node_count_fname = os.path.join(env['build_dir'], ".scons_node_count")
 
     import time, math
 
@@ -954,6 +930,7 @@ def show_progress(env):
             if show_progress:
                 # Print the progress percentage
                 node_count += node_count_interval
+
                 if node_count_max > 0 and node_count <= node_count_max:
                     screen.write("\r[%3d%%] " % (node_count * 100 / node_count_max))
                     screen.flush()
@@ -1021,7 +998,7 @@ def show_progress(env):
             return total_size
 
     def progress_finish(target, source, env):
-        nonlocal node_count, progressor
+        nonlocal node_count, progressor, node_count_fname
         try:
             with open(node_count_fname, "w") as f:
                 f.write("%d\n" % node_count)
@@ -1032,7 +1009,7 @@ def show_progress(env):
     try:
         with open(node_count_fname) as f:
             node_count_max = int(f.readline())
-    except Exception:
+    except:
         pass
 
     cache_directory = os.environ.get("SCONS_CACHE")
@@ -1053,5 +1030,5 @@ def dump(env):
     def non_serializable(obj):
         return "<<non-serializable: %s>>" % (type(obj).__qualname__)
 
-    with open(".scons_env.json", "w") as f:
+    with open(os.path.join(env["build_dir"], ".scons_env.json"), "w") as f:
         dump(env.Dictionary(), f, indent=4, default=non_serializable)

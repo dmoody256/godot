@@ -16,12 +16,13 @@ thirdparty_sources = [
     "ProcessRGB.cpp",
     "Tables.cpp",
 ]
-thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+thirdparty_sources = ["etcpak/" + file for file in thirdparty_sources]
 
 env_etcpak.Prepend(CPPPATH=[thirdparty_dir])
 
 env_thirdparty = env_etcpak.Clone()
 env_thirdparty.disable_warnings()
+env.VariantDir("etcpak", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 

@@ -23,12 +23,13 @@ if env["builtin_squish"]:
         "squish.cpp",
     ]
 
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["squish/" + file for file in thirdparty_sources]
 
     env_squish.Prepend(CPPPATH=[thirdparty_dir])
 
     env_thirdparty = env_squish.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("squish", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

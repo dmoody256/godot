@@ -2,8 +2,12 @@
 
 Import("env")
 
-from platform_methods import run_in_subprocess
-import platform_linuxbsd_builders
+
+# module name collision, stand in hack
+import sys
+
+del sys.modules["platform"]
+from platform.linuxbsd import platform_linuxbsd_builders
 
 common_linuxbsd = [
     "crash_handler_linuxbsd.cpp",
@@ -26,7 +30,7 @@ if "vulkan" in env and env["vulkan"]:
 if "udev" in env and env["udev"]:
     common_linuxbsd.append("libudev-so_wrap.c")
 
-prog = env.add_program("#bin/godot", ["godot_linuxbsd.cpp"] + common_linuxbsd)
-
+prog = env.add_program("bin/godot", ["godot_linuxbsd.cpp"] + common_linuxbsd)
+env.Install("#bin", prog)
 if env["debug_symbols"] and env["separate_debug_symbols"]:
     env.AddPostAction(prog, run_in_subprocess(platform_linuxbsd_builders.make_debug_linuxbsd))

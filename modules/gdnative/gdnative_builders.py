@@ -4,7 +4,6 @@ All such functions are invoked in a subprocess on Windows to prevent build flaki
 
 """
 import json
-from platform_methods import subprocess_main
 
 
 def _spaced(e):
@@ -249,15 +248,12 @@ def _build_gdnative_api_struct_source(api):
 
 def build_gdnative_api_struct(target, source, env):
 
-    with open(source[0], "r") as fd:
+    with open(source[0].path, "r") as fd:
         api = json.load(fd)
 
     header, source = target
-    with open(header, "w") as fd:
+    with open(header.path, "w") as fd:
         fd.write(_build_gdnative_api_struct_header(api))
-    with open(source, "w") as fd:
+    with open(source.path, "w") as fd:
         fd.write(_build_gdnative_api_struct_source(api))
 
-
-if __name__ == "__main__":
-    subprocess_main(globals())

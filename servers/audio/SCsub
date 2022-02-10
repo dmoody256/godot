@@ -4,4 +4,4 @@ Import("env")
 
 env.add_source_files(env.servers_sources, "*.cpp")
 
-SConscript("effects/SCsub")
+SConscript("effects/SCsub", duplicate=0)

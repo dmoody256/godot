@@ -27,21 +27,20 @@ elif env["platform"] == "windows":
 # Build Vulkan memory allocator and volk
 env_thirdparty_vma = env.Clone()
 env_thirdparty_vma.disable_warnings()
-thirdparty_sources_vma = [thirdparty_dir + "/vk_mem_alloc.cpp"]
 
 if env["use_volk"]:
     env_thirdparty_vma.AppendUnique(CPPDEFINES=["VMA_STATIC_VULKAN_FUNCTIONS=1"])
     env_thirdparty_volk = env.Clone()
     env_thirdparty_volk.disable_warnings()
 
-    thirdparty_sources_volk = [thirdparty_volk_dir + "/volk.c"]
-    env_thirdparty_volk.add_source_files(thirdparty_obj, thirdparty_sources_volk)
+    env_thirdparty_volk.VariantDir("volk", env.Dir(thirdparty_volk_dir), duplicate=0)
+    env_thirdparty_volk.add_source_files(thirdparty_obj, ["volk/volk.c"])
 elif env["platform"] == "android":
     # Our current NDK version only provides old Vulkan headers,
     # so we have to limit VMA.
     env_thirdparty_vma.AppendUnique(CPPDEFINES=["VMA_VULKAN_VERSION=1000000"])
-
-env_thirdparty_vma.add_source_files(thirdparty_obj, thirdparty_sources_vma)
+env_thirdparty_vma.VariantDir("vulkan", env.Dir(thirdparty_dir), duplicate=0)
+env_thirdparty_vma.add_source_files(thirdparty_obj, ["vulkan/vk_mem_alloc.cpp"])
 
 
 env.drivers_sources += thirdparty_obj

@@ -21,13 +21,14 @@ if env["builtin_enet"]:
         "peer.c",
         "protocol.c",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["enet/" + file for file in thirdparty_sources]
 
     env_enet.Prepend(CPPPATH=[thirdparty_dir])
     env_enet.Append(CPPDEFINES=["GODOT_ENET"])
 
     env_thirdparty = env_enet.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("enet", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

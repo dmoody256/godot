@@ -3,8 +3,6 @@
 All such functions are invoked in a subprocess on Windows to prevent build flakiness.
 
 """
-from platform_methods import subprocess_main
-
 
 class GLES3HeaderStruct:
     def __init__(self):
@@ -182,11 +180,10 @@ def include_file_in_gles3_header(filename, header_data, depth):
     return header_data
 
 
-def build_gles3_header(filename, include, class_suffix, output_attribs):
+def build_gles3_header(out_file, filename, include, class_suffix, output_attribs):
     header_data = GLES3HeaderStruct()
     include_file_in_gles3_header(filename, header_data, 0)
 
-    out_file = filename + ".gen.h"
     fd = open(out_file, "w")
     defspec = 0
     defvariant = ""
@@ -551,9 +548,7 @@ def build_gles3_header(filename, include, class_suffix, output_attribs):
 
 
 def build_gles3_headers(target, source, env):
-    for x in source:
-        build_gles3_header(str(x), include="drivers/gles3/shader_gles3.h", class_suffix="GLES3", output_attribs=True)
+    for t,s in zip(target,source):
+        build_gles3_header(t.path, s.path, include="drivers/gles3/shader_gles3.h", class_suffix="GLES3", output_attribs=True)
 
 
-if __name__ == "__main__":
-    subprocess_main(globals())

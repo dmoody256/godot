@@ -47,7 +47,7 @@ if env["builtin_pcre2"]:
         "pcre2_xclass.c",
     ]
 
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["pcre2/src/" + file for file in thirdparty_sources]
 
     env_regex.Prepend(CPPPATH=[thirdparty_dir])
     env_regex.Append(CPPDEFINES=thirdparty_flags)
@@ -57,6 +57,7 @@ if env["builtin_pcre2"]:
         env_pcre2.disable_warnings()
         env_pcre2["OBJSUFFIX"] = "_" + width + env_pcre2["OBJSUFFIX"]
         env_pcre2.Append(CPPDEFINES=[("PCRE2_CODE_UNIT_WIDTH", width)])
+        env_pcre2.VariantDir("pcre2/src", env.Dir(thirdparty_dir), duplicate=0)
         env_pcre2.add_source_files(thirdparty_obj, thirdparty_sources)
         env.modules_sources += thirdparty_obj
 

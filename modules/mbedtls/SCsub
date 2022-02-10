@@ -97,12 +97,13 @@ if env["builtin_mbedtls"]:
     ]
 
     thirdparty_dir = "#thirdparty/mbedtls/library/"
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["mbedtls/library/" + file for file in thirdparty_sources]
 
     env_mbed_tls.Prepend(CPPPATH=["#thirdparty/mbedtls/include/"])
 
     env_thirdparty = env_mbed_tls.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("mbedtls/library", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

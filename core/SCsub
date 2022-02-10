@@ -2,7 +2,8 @@
 
 Import("env")
 
-import core_builders
+from core import core_builders
+import methods
 
 env.core_sources = []
 
@@ -35,11 +36,14 @@ if "SCRIPT_AES256_ENCRYPTION_KEY" in os.environ:
         )
         Exit(255)
 
-# NOTE: It is safe to generate this file here, since this is still executed serially
-with open("script_encryption_key.gen.cpp", "w") as f:
-    f.write('#include "core/config/project_settings.h"\nuint8_t script_encryption_key[32]={' + txt + "};\n")
+env.Textfile(
+    "script_encryption_key.gen.cpp",
+    ['#include "core/config/project_settings.h"\nuint8_t script_encryption_key[32]={' + txt + "};"],
+)
 
-
+methods.update_version(env, env.module_version_string)
+methods.write_disabled_classes(env, env["disable_classes"].split(","))
+env.Append(CPPPATH=[env.Dir(".")])
 # Add required thirdparty code.
 
 thirdparty_obj = []
@@ -50,37 +54,37 @@ env_thirdparty.disable_warnings()
 # Misc thirdparty code: header paths are hardcoded, we don't need to append
 # to the include path (saves a few chars on the compiler invocation for touchy MSVC...)
 thirdparty_misc_dir = "#thirdparty/misc/"
+env_thirdparty.VariantDir("misc", env.Dir(thirdparty_misc_dir), duplicate=0)
 thirdparty_misc_sources = [
     # C sources
-    "fastlz.c",
-    "r128.c",
-    "smaz.c",
+    "misc/fastlz.c",
+    "misc/r128.c",
+    "misc/smaz.c",
     # C++ sources
-    "pcg.cpp",
-    "polypartition.cpp",
-    "clipper.cpp",
-    "smolv.cpp",
+    "misc/pcg.cpp",
+    "misc/polypartition.cpp",
+    "misc/clipper.cpp",
+    "misc/smolv.cpp",
 ]
-thirdparty_misc_sources = [thirdparty_misc_dir + file for file in thirdparty_misc_sources]
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_misc_sources)
 
 # Zlib library, can be unbundled
 if env["builtin_zlib"]:
     thirdparty_zlib_dir = "#thirdparty/zlib/"
+    env_thirdparty.VariantDir("zlib", env.Dir(thirdparty_zlib_dir), duplicate=0)
     thirdparty_zlib_sources = [
-        "adler32.c",
-        "compress.c",
-        "crc32.c",
-        "deflate.c",
-        "infback.c",
-        "inffast.c",
-        "inflate.c",
-        "inftrees.c",
-        "trees.c",
-        "uncompr.c",
-        "zutil.c",
+        "zlib/adler32.c",
+        "zlib/compress.c",
+        "zlib/crc32.c",
+        "zlib/deflate.c",
+        "zlib/infback.c",
+        "zlib/inffast.c",
+        "zlib/inflate.c",
+        "zlib/inftrees.c",
+        "zlib/trees.c",
+        "zlib/uncompr.c",
+        "zlib/zutil.c",
     ]
-    thirdparty_zlib_sources = [thirdparty_zlib_dir + file for file in thirdparty_zlib_sources]
 
     env_thirdparty.Prepend(CPPPATH=[thirdparty_zlib_dir])
     # Needs to be available in main env too
@@ -93,8 +97,8 @@ if env["builtin_zlib"]:
 # Minizip library, could be unbundled in theory
 # However, our version has some custom modifications, so it won't compile with the system one
 thirdparty_minizip_dir = "#thirdparty/minizip/"
-thirdparty_minizip_sources = ["ioapi.c", "unzip.c", "zip.c"]
-thirdparty_minizip_sources = [thirdparty_minizip_dir + file for file in thirdparty_minizip_sources]
+thirdparty_minizip_sources = ["minizip/ioapi.c", "minizip/unzip.c", "minizip/zip.c"]
+env_thirdparty.VariantDir("minizip", env.Dir(thirdparty_minizip_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_minizip_sources)
 
 # Zstd library, can be unbundled in theory
@@ -103,40 +107,39 @@ env_thirdparty.add_source_files(thirdparty_obj, thirdparty_minizip_sources)
 if env["builtin_zstd"]:
     thirdparty_zstd_dir = "#thirdparty/zstd/"
     thirdparty_zstd_sources = [
-        "common/debug.c",
-        "common/entropy_common.c",
-        "common/error_private.c",
-        "common/fse_decompress.c",
-        "common/pool.c",
-        "common/threading.c",
-        "common/xxhash.c",
-        "common/zstd_common.c",
-        "compress/fse_compress.c",
-        "compress/hist.c",
-        "compress/huf_compress.c",
-        "compress/zstd_compress.c",
-        "compress/zstd_double_fast.c",
-        "compress/zstd_fast.c",
-        "compress/zstd_lazy.c",
-        "compress/zstd_ldm.c",
-        "compress/zstd_opt.c",
-        "compress/zstdmt_compress.c",
-        "compress/zstd_compress_literals.c",
-        "compress/zstd_compress_sequences.c",
-        "compress/zstd_compress_superblock.c",
-        "decompress/huf_decompress.c",
-        "decompress/zstd_ddict.c",
-        "decompress/zstd_decompress_block.c",
-        "decompress/zstd_decompress.c",
+        "zstd/common/debug.c",
+        "zstd/common/entropy_common.c",
+        "zstd/common/error_private.c",
+        "zstd/common/fse_decompress.c",
+        "zstd/common/pool.c",
+        "zstd/common/threading.c",
+        "zstd/common/xxhash.c",
+        "zstd/common/zstd_common.c",
+        "zstd/compress/fse_compress.c",
+        "zstd/compress/hist.c",
+        "zstd/compress/huf_compress.c",
+        "zstd/compress/zstd_compress.c",
+        "zstd/compress/zstd_double_fast.c",
+        "zstd/compress/zstd_fast.c",
+        "zstd/compress/zstd_lazy.c",
+        "zstd/compress/zstd_ldm.c",
+        "zstd/compress/zstd_opt.c",
+        "zstd/compress/zstdmt_compress.c",
+        "zstd/compress/zstd_compress_literals.c",
+        "zstd/compress/zstd_compress_sequences.c",
+        "zstd/compress/zstd_compress_superblock.c",
+        "zstd/decompress/huf_decompress.c",
+        "zstd/decompress/zstd_ddict.c",
+        "zstd/decompress/zstd_decompress_block.c",
+        "zstd/decompress/zstd_decompress.c",
     ]
-    thirdparty_zstd_sources = [thirdparty_zstd_dir + file for file in thirdparty_zstd_sources]
 
     env_thirdparty.Prepend(CPPPATH=[thirdparty_zstd_dir, thirdparty_zstd_dir + "common"])
     env_thirdparty.Append(CPPDEFINES=["ZSTD_STATIC_LINKING_ONLY"])
     env.Prepend(CPPPATH=thirdparty_zstd_dir)
     # Also needed in main env includes will trigger warnings
     env.Append(CPPDEFINES=["ZSTD_STATIC_LINKING_ONLY"])
-
+    env_thirdparty.VariantDir("zstd", env.Dir(thirdparty_zstd_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_zstd_sources)
 
 
@@ -150,51 +153,42 @@ env.add_source_files(env.core_sources, "script_encryption_key.gen.cpp")
 env.add_source_files(env.core_sources, "version_hash.gen.cpp")
 
 # Certificates
-env.Depends(
-    "#core/io/certs_compressed.gen.h",
+env.Command(
+    "io/certs_compressed.gen.h",
     ["#thirdparty/certs/ca-certificates.crt", env.Value(env["builtin_certs"]), env.Value(env["system_certs_path"])],
-)
-env.CommandNoCache(
-    "#core/io/certs_compressed.gen.h",
-    "#thirdparty/certs/ca-certificates.crt",
-    env.Run(core_builders.make_certs_header, "Building ca-certificates header."),
+    Action(core_builders.make_certs_header, "Building ca-certificates header."),
 )
 
 # Authors
-env.Depends("#core/authors.gen.h", "../AUTHORS.md")
-env.CommandNoCache(
-    "#core/authors.gen.h", "../AUTHORS.md", env.Run(core_builders.make_authors_header, "Generating authors header.")
+env.Command(
+    "authors.gen.h", "#AUTHORS.md", Action(core_builders.make_authors_header, "Generating authors header.")
 )
 
 # Donors
-env.Depends("#core/donors.gen.h", "../DONORS.md")
-env.CommandNoCache(
-    "#core/donors.gen.h", "../DONORS.md", env.Run(core_builders.make_donors_header, "Generating donors header.")
-)
+env.Command("donors.gen.h", "#DONORS.md", Action(core_builders.make_donors_header, "Generating donors header."))
 
 # License
-env.Depends("#core/license.gen.h", ["../COPYRIGHT.txt", "../LICENSE.txt"])
-env.CommandNoCache(
-    "#core/license.gen.h",
-    ["../COPYRIGHT.txt", "../LICENSE.txt"],
-    env.Run(core_builders.make_license_header, "Generating license header."),
+env.Command(
+    "license.gen.h",
+    ["#COPYRIGHT.txt", "#LICENSE.txt"],
+    Action(core_builders.make_license_header, "Generating license header."),
 )
 
 # Chain load SCsubs
-SConscript("os/SCsub")
-SConscript("math/SCsub")
-SConscript("crypto/SCsub")
-SConscript("io/SCsub")
-SConscript("multiplayer/SCsub")
-SConscript("debugger/SCsub")
-SConscript("input/SCsub")
-SConscript("variant/SCsub")
-SConscript("extension/SCsub")
-SConscript("object/SCsub")
-SConscript("templates/SCsub")
-SConscript("string/SCsub")
-SConscript("config/SCsub")
-SConscript("error/SCsub")
+SConscript("os/SCsub", duplicate=0)
+SConscript("math/SCsub", duplicate=0)
+SConscript("crypto/SCsub", duplicate=0)
+SConscript("io/SCsub", duplicate=0)
+SConscript("multiplayer/SCsub", duplicate=0)
+SConscript("debugger/SCsub", duplicate=0)
+SConscript("input/SCsub", duplicate=0)
+SConscript("variant/SCsub", duplicate=0)
+SConscript("extension/SCsub", duplicate=0)
+SConscript("object/SCsub", duplicate=0)
+SConscript("templates/SCsub", duplicate=0)
+SConscript("string/SCsub", duplicate=0)
+SConscript("config/SCsub", duplicate=0)
+SConscript("error/SCsub", duplicate=0)
 
 
 # Build it all as a library

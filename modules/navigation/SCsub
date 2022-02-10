@@ -25,12 +25,13 @@ if env["builtin_recast"]:
         "Source/RecastRasterization.cpp",
         "Source/RecastRegion.cpp",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["recastnavigation/Recast/" + file for file in thirdparty_sources]
 
     env_navigation.Prepend(CPPPATH=[thirdparty_dir + "Include"])
 
     env_thirdparty = env_navigation.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("recastnavigation/Recast", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 
 # RVO Thirdparty source files
@@ -40,12 +41,13 @@ if env["builtin_rvo2"]:
         "Agent.cpp",
         "KdTree.cpp",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["rvo2/" + file for file in thirdparty_sources]
 
     env_navigation.Prepend(CPPPATH=[thirdparty_dir])
 
     env_thirdparty = env_navigation.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("rvo2", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 
 

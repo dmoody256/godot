@@ -20,7 +20,7 @@ elif env["builtin_wslay"]:
         "wslay_queue.c",
         "wslay_frame.c",
     ]
-    thirdparty_sources = [thirdparty_dir + s for s in thirdparty_sources]
+    thirdparty_sources = ["wslay/" + s for s in thirdparty_sources]
 
     env_ws.Prepend(CPPPATH=[thirdparty_dir])
     env_ws.Append(CPPDEFINES=["HAVE_CONFIG_H"])
@@ -32,6 +32,7 @@ elif env["builtin_wslay"]:
 
     env_thirdparty = env_ws.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("wslay", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

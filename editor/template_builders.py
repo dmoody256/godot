@@ -4,7 +4,6 @@ All such functions are invoked in a subprocess on Windows to prevent build flaki
 
 import os
 from io import StringIO
-from platform_methods import subprocess_main
 
 
 def parse_template(inherits, source, delimiter):
@@ -53,7 +52,7 @@ def parse_template(inherits, source, delimiter):
 
 
 def make_templates(target, source, env):
-    dst = target[0]
+    dst = target[0].path
     s = StringIO()
     s.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n\n")
     s.write("#ifndef _CODE_TEMPLATES_H\n")
@@ -63,7 +62,7 @@ def make_templates(target, source, env):
 
     delimiter = "#"  # GDScript single line comment delimiter by default.
     if source:
-        ext = os.path.splitext(source[0])[1]
+        ext = os.path.splitext(source[0].path)[1]
         if ext == ".cs":
             delimiter = "//"
 
@@ -71,8 +70,8 @@ def make_templates(target, source, env):
     number_of_templates = 0
 
     for filepath in source:
-        node_name = os.path.basename(os.path.dirname(filepath))
-        parsed_template = parse_template(node_name, filepath, delimiter)
+        node_name = os.path.basename(os.path.dirname(filepath.path))
+        parsed_template = parse_template(node_name, filepath.path, delimiter)
         parsed_template_string += "\t" + parsed_template
         number_of_templates += 1
 
@@ -90,6 +89,3 @@ def make_templates(target, source, env):
 
     s.close()
 
-
-if __name__ == "__main__":
-    subprocess_main(globals())

@@ -34,10 +34,11 @@ if env["builtin_msdfgen"]:
         "core/sdf-error-estimation.cpp",
         "core/shape-description.cpp",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["msdfgen/" + file for file in thirdparty_sources]
 
     env_msdfgen.Append(CPPPATH=["#thirdparty/freetype/include", "#thirdparty/msdfgen", "#thirdparty/nanosvg"])
 
+    env_msdfgen.VariantDir("msdfgen", env.Dir(thirdparty_dir), duplicate=0)
     lib = env_msdfgen.add_library("msdfgen_builtin", thirdparty_sources)
     thirdparty_obj += lib
 

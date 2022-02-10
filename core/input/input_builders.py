@@ -3,12 +3,12 @@
 All such functions are invoked in a subprocess on Windows to prevent build flakiness.
 """
 
-from platform_methods import subprocess_main
+
 from collections import OrderedDict
 
 
 def make_default_controller_mappings(target, source, env):
-    dst = target[0]
+    dst = target[0].path
     g = open(dst, "w")
 
     g.write("/* THIS FILE IS GENERATED DO NOT EDIT */\n")
@@ -18,7 +18,7 @@ def make_default_controller_mappings(target, source, env):
     # ensure mappings have a consistent order
     platform_mappings = OrderedDict()
     for src_path in source:
-        with open(src_path, "r") as f:
+        with open(src_path.path, "r") as f:
             # read mapping file and skip header
             mapping_file_lines = f.readlines()[2:]
 
@@ -64,7 +64,3 @@ def make_default_controller_mappings(target, source, env):
 
     g.write("\tnullptr\n};\n")
     g.close()
-
-
-if __name__ == "__main__":
-    subprocess_main(globals())

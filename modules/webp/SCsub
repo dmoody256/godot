@@ -128,12 +128,13 @@ if env["builtin_libwebp"]:
         "utils/thread_utils.c",
         "utils/utils.c",
     ]
-    thirdparty_sources = [thirdparty_dir + "src/" + file for file in thirdparty_sources]
+    thirdparty_sources = ["libwebp/src/" + file for file in thirdparty_sources]
 
     env_webp.Prepend(CPPPATH=[thirdparty_dir, thirdparty_dir + "src/"])
 
     env_thirdparty = env_webp.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("libwebp", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

@@ -55,7 +55,7 @@ if env["builtin_freetype"]:
         "src/type42/type42.c",
         "src/winfonts/winfnt.c",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ['freetype/' + file for file in thirdparty_sources]
 
     if env["platform"] == "uwp":
         # Include header for UWP to fix build issues
@@ -75,7 +75,7 @@ if env["builtin_freetype"]:
     if env["builtin_libpng"]:
         env_freetype.Prepend(CPPPATH=["#thirdparty/libpng"])
 
-    sfnt = thirdparty_dir + "src/sfnt/sfnt.c"
+    sfnt = "freetype/src/sfnt/sfnt.c"
     # Must be done after all CPPDEFINES are being set so we can copy them.
     if env["platform"] == "javascript":
         # Forcibly undefine this macro so SIMD is not used in this file,
@@ -88,6 +88,7 @@ if env["builtin_freetype"]:
 
     env_thirdparty = env_freetype.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("freetype", env.Dir(thirdparty_dir), duplicate=0)
     lib = env_thirdparty.add_library("freetype_builtin", thirdparty_sources)
     thirdparty_obj += lib
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import build_scripts.mono_configure as mono_configure
+from modules.mono.build_scripts import mono_configure
 
 Import("env")
 Import("env_modules")

@@ -2,8 +2,11 @@
 
 Import("env")
 
-from platform_methods import run_in_subprocess
-import platform_osx_builders
+
+import sys
+
+del sys.modules["platform"]
+from platform.osx import platform_osx_builders
 
 files = [
     "os_osx.mm",
@@ -23,7 +26,7 @@ files = [
     "gl_manager_osx_legacy.mm",
 ]
 
-prog = env.add_program("#bin/godot", files)
-
+prog = env.add_program("bin/godot", files)
+env.Install("#bin", prog)
 if env["debug_symbols"] and env["separate_debug_symbols"]:
     env.AddPostAction(prog, run_in_subprocess(platform_osx_builders.make_debug_osx))

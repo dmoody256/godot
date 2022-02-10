@@ -6,11 +6,10 @@ Import("env")
 
 thirdparty_obj = []
 
-thirdparty_sources = "#thirdparty/misc/mikktspace.c"
-
 env_thirdparty = env.Clone()
 env_thirdparty.disable_warnings()
-env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
+env_thirdparty.VariantDir("misc", env.Dir("#thirdparty/misc"), duplicate=0)
+env_thirdparty.add_source_files(thirdparty_obj, ["misc/mikktspace.c"])
 env.scene_sources += thirdparty_obj
 
 # Godot source files
@@ -23,4 +22,4 @@ env.scene_sources += scene_obj
 # Needed to force rebuilding the scene files when the thirdparty code is updated.
 env.Depends(scene_obj, thirdparty_obj)
 
-SConscript("default_theme/SCsub")
+SConscript("default_theme/SCsub", duplicate=0)

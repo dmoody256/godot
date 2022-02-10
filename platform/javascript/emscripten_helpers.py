@@ -39,7 +39,7 @@ def create_engine_file(env, target, source, externs):
 
 def create_template_zip(env, js, wasm, extra):
     binary_name = "godot.tools" if env["tools"] else "godot"
-    zip_dir = env.Dir("#bin/.javascript_zip")
+    zip_dir = env.Dir("bin/.javascript_zip")
     in_files = [
         js,
         wasm,
@@ -107,13 +107,14 @@ def create_template_zip(env, js, wasm, extra):
         out_files.append(zip_dir.File("godot.offline.html"))
 
     zip_files = env.InstallAs(out_files, in_files)
-    env.Zip(
-        "#bin/godot",
+    zipped_bin = env.Zip(
+        "bin/godot",
         zip_files,
         ZIPROOT=zip_dir,
         ZIPSUFFIX="${PROGSUFFIX}${ZIPSUFFIX}",
         ZIPCOMSTR="Archiving $SOURCES as $TARGET",
     )
+    env.Install("#bin", zipped_bin)
 
 
 def add_js_libraries(env, libraries):

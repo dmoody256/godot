@@ -5,33 +5,33 @@ Import("env")
 env.drivers_sources = []
 
 # OS drivers
-SConscript("unix/SCsub")
-SConscript("windows/SCsub")
+SConscript("unix/SCsub", duplicate=0)
+SConscript("windows/SCsub", duplicate=0)
 
 # Sounds drivers
-SConscript("alsa/SCsub")
-SConscript("coreaudio/SCsub")
-SConscript("pulseaudio/SCsub")
+SConscript("alsa/SCsub", duplicate=0)
+SConscript("coreaudio/SCsub", duplicate=0)
+SConscript("pulseaudio/SCsub", duplicate=0)
 if env["platform"] == "windows":
-    SConscript("wasapi/SCsub")
+    SConscript("wasapi/SCsub", duplicate=0)
 if env["xaudio2"]:
-    SConscript("xaudio2/SCsub")
+    SConscript("xaudio2/SCsub", duplicate=0)
 
 # Midi drivers
-SConscript("alsamidi/SCsub")
-SConscript("coremidi/SCsub")
-SConscript("winmidi/SCsub")
+SConscript("alsamidi/SCsub", duplicate=0)
+SConscript("coremidi/SCsub", duplicate=0)
+SConscript("winmidi/SCsub", duplicate=0)
 
 # Graphics drivers
 if env["vulkan"]:
-    SConscript("vulkan/SCsub")
+    SConscript("vulkan/SCsub", duplicate=0)
 if env["opengl3"]:
-    SConscript("gl_context/SCsub")
-    SConscript("gles3/SCsub")
+    SConscript("gl_context/SCsub", duplicate=0)
+    SConscript("gles3/SCsub", duplicate=0)
 
 # Core dependencies
-SConscript("png/SCsub")
-SConscript("spirv-reflect/SCsub")
+SConscript("png/SCsub", duplicate=0)
+SConscript("spirv-reflect/SCsub", duplicate=0)
 
 env.add_source_files(env.drivers_sources, "*.cpp")
 

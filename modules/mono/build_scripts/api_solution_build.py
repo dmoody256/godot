@@ -66,7 +66,7 @@ def build(env_mono):
 
         targets = [os.path.join(editor_api_dir, filename) for filename in target_filenames]
 
-        cmd = env_mono.CommandNoCache(
+        cmd = env_mono.Command(
             targets, depend_cmd, build_api_solution, module_dir=os.getcwd(), solution_build_config=build_config
         )
         env_mono.AlwaysBuild(cmd)

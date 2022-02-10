@@ -71,7 +71,7 @@ if env["builtin_libtheora"]:
     if env["x86_libtheora_opt_gcc"] or env["x86_libtheora_opt_vc"]:
         env_theora.Append(CPPDEFINES=["OC_X86_ASM"])
 
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["libtheora/" + file for file in thirdparty_sources]
 
     env_theora.Prepend(CPPPATH=[thirdparty_dir])
 
@@ -83,6 +83,7 @@ if env["builtin_libtheora"]:
 
     env_thirdparty = env_theora.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("libtheora", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

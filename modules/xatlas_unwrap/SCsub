@@ -14,12 +14,13 @@ if env["builtin_xatlas"]:
     thirdparty_sources = [
         "xatlas.cpp",
     ]
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["xatlas/" + file for file in thirdparty_sources]
 
     env_xatlas_unwrap.Prepend(CPPPATH=[thirdparty_dir])
 
     env_thirdparty = env_xatlas_unwrap.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("xatlas", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

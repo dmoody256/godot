@@ -2,22 +2,24 @@
 
 Import("env")
 
-from platform_methods import run_in_subprocess
-import default_theme_builders
-import default_theme_icons_builders
+import os
+import os.path
 
-env.add_source_files(env.scene_sources, "*.cpp")
+from scene.resources.default_theme import default_theme_builders
+from scene.resources.default_theme import default_theme_icons_builders
 
-env.Depends("#scene/resources/default_theme/default_font.gen.h", "#thirdparty/fonts/OpenSans_SemiBold.ttf")
-env.CommandNoCache(
-    "#scene/resources/default_theme/default_font.gen.h",
+default_theme_env = env.Clone()
+
+default_theme_env.add_source_files(env.scene_sources, "*.cpp")
+
+default_theme_env.Command(
+    "default_font.gen.h",
     "#thirdparty/fonts/OpenSans_SemiBold.ttf",
-    run_in_subprocess(default_theme_builders.make_fonts_header),
+    default_theme_builders.make_fonts_header,
 )
 
 env["BUILDERS"]["MakeDefaultThemeIconsBuilder"] = Builder(
-    action=env.Run(
-        default_theme_icons_builders.make_default_theme_icons_action, "Generating default project theme icons header."
+    action=Action(default_theme_icons_builders.make_default_theme_icons_action, "Generating default project theme icons header."
     ),
     suffix=".h",
     src_suffix=".svg",
@@ -28,5 +30,6 @@ icon_sources = Glob("*.svg")
 
 env.Alias(
     "default_theme_icons",
-    [env.MakeDefaultThemeIconsBuilder("#scene/resources/default_theme/default_theme_icons.gen.h", icon_sources)],
+    [env.MakeDefaultThemeIconsBuilder("default_theme_icons.gen.h", icon_sources)],
 )
+default_theme_env.Append(CPPPATH=[default_theme_env.Dir(".")])

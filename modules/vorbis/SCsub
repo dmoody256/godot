@@ -39,7 +39,7 @@ if env["builtin_libvorbis"]:
         "window.c",
     ]
 
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["libvorbis/" + file for file in thirdparty_sources]
 
     env_vorbis.Prepend(CPPPATH=[thirdparty_dir])
 
@@ -49,6 +49,7 @@ if env["builtin_libvorbis"]:
 
     env_thirdparty = env_vorbis.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("libvorbis", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

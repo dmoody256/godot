@@ -60,7 +60,7 @@ if env["builtin_embree"]:
         "kernels/bvh/bvh_intersector_stream_filters.cpp",
     ]
 
-    thirdparty_sources = [thirdparty_dir + file for file in embree_src]
+    thirdparty_sources = ["embree/" + file for file in embree_src]
 
     env_raycast.Prepend(CPPPATH=[thirdparty_dir, thirdparty_dir + "include"])
     env_raycast.Append(CPPDEFINES=["EMBREE_TARGET_SSE2", "EMBREE_LOWEST_ISA", "TASKING_INTERNAL", "NDEBUG"])
@@ -81,6 +81,7 @@ if env["builtin_embree"]:
     env_thirdparty = env_raycast.Clone()
     env_thirdparty.force_optimization_on_debug()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("embree", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 
     if not env["arch"] in ["x86", "x86_64"] or env.msvc:

@@ -3,12 +3,11 @@
 All such functions are invoked in a subprocess on Windows to prevent build flakiness.
 
 """
-from platform_methods import subprocess_main
 
 
 def make_splash(target, source, env):
-    src = source[0]
-    dst = target[0]
+    src = source[0].path
+    dst = target[0].path
 
     with open(src, "rb") as f:
         buf = f.read()
@@ -27,8 +26,8 @@ def make_splash(target, source, env):
 
 
 def make_splash_editor(target, source, env):
-    src = source[0]
-    dst = target[0]
+    src = source[0].path
+    dst = target[0].path
 
     with open(src, "rb") as f:
         buf = f.read()
@@ -48,8 +47,8 @@ def make_splash_editor(target, source, env):
 
 
 def make_app_icon(target, source, env):
-    src = source[0]
-    dst = target[0]
+    src = source[0].path
+    dst = target[0].path
 
     with open(src, "rb") as f:
         buf = f.read()
@@ -63,7 +62,3 @@ def make_app_icon(target, source, env):
             g.write(str(buf[i]) + ",\n")
         g.write("};\n")
         g.write("#endif")
-
-
-if __name__ == "__main__":
-    subprocess_main(globals())

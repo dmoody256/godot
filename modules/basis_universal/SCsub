@@ -13,29 +13,28 @@ thirdparty_obj = []
 thirdparty_dir = "#thirdparty/basis_universal/"
 # Sync list with upstream CMakeLists.txt
 encoder_sources = [
-    "apg_bmp.c",
-    "basisu_astc_decomp.cpp",
-    "basisu_backend.cpp",
-    "basisu_basis_file.cpp",
-    "basisu_bc7enc.cpp",
-    "basisu_comp.cpp",
-    "basisu_enc.cpp",
-    "basisu_etc.cpp",
-    "basisu_frontend.cpp",
-    "basisu_global_selector_palette_helpers.cpp",
-    "basisu_gpu_texture.cpp",
-    "basisu_kernels_sse.cpp",
-    "basisu_pvrtc1_4.cpp",
-    "basisu_resampler.cpp",
-    "basisu_resample_filters.cpp",
-    "basisu_ssim.cpp",
-    "basisu_uastc_enc.cpp",
-    "jpgd.cpp",
-    "lodepng.cpp",
+    "basis_universal/encoder/apg_bmp.c",
+    "basis_universal/encoder/basisu_astc_decomp.cpp",
+    "basis_universal/encoder/basisu_backend.cpp",
+    "basis_universal/encoder/basisu_basis_file.cpp",
+    "basis_universal/encoder/basisu_bc7enc.cpp",
+    "basis_universal/encoder/basisu_comp.cpp",
+    "basis_universal/encoder/basisu_enc.cpp",
+    "basis_universal/encoder/basisu_etc.cpp",
+    "basis_universal/encoder/basisu_frontend.cpp",
+    "basis_universal/encoder/basisu_global_selector_palette_helpers.cpp",
+    "basis_universal/encoder/basisu_gpu_texture.cpp",
+    "basis_universal/encoder/basisu_kernels_sse.cpp",
+    "basis_universal/encoder/basisu_pvrtc1_4.cpp",
+    "basis_universal/encoder/basisu_resampler.cpp",
+    "basis_universal/encoder/basisu_resample_filters.cpp",
+    "basis_universal/encoder/basisu_ssim.cpp",
+    "basis_universal/encoder/basisu_uastc_enc.cpp",
+    "basis_universal/encoder/jpgd.cpp",
+    "basis_universal/encoder/lodepng.cpp",
+    "basis_universal/transcoder/basisu_transcoder.cpp",
 ]
-encoder_sources = [thirdparty_dir + "encoder/" + file for file in encoder_sources]
-transcoder_sources = [thirdparty_dir + "transcoder/basisu_transcoder.cpp"]
-
+transcoder_sources = ["basis_universal/transcoder/basisu_transcoder.cpp"]
 # Treat Basis headers as system headers to avoid raising warnings. Not supported on MSVC.
 if not env.msvc:
     env_basisu.Append(CPPFLAGS=["-isystem", Dir(thirdparty_dir).path])
@@ -46,6 +45,7 @@ if env["target"] == "debug":
     env_basisu.Append(CPPDEFINES=[("BASISU_DEVEL_MESSAGES", 1), ("BASISD_ENABLE_DEBUG_FLAGS", 1)])
 
 env_thirdparty = env_basisu.Clone()
+env_thirdparty.VariantDir("basis_universal", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.disable_warnings()
 if env["tools"]:
     env_thirdparty.Append(CPPDEFINES=["BASISU_NO_IMG_LOADERS"])

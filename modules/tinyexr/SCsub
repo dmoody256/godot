@@ -14,7 +14,7 @@ thirdparty_dir = "#thirdparty/tinyexr/"
 thirdparty_sources = [
     "tinyexr.cc",
 ]
-thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+thirdparty_sources = ["tinyexr/" + file for file in thirdparty_sources]
 
 env_tinyexr.Prepend(CPPPATH=[thirdparty_dir])
 
@@ -26,6 +26,7 @@ env_tinyexr.Append(CPPDEFINES=[("TINYEXR_USE_MINIZ", 0)])
 
 env_thirdparty = env_tinyexr.Clone()
 env_thirdparty.disable_warnings()
+env_thirdparty.VariantDir("tinyexr", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 

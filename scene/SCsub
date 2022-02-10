@@ -8,16 +8,16 @@ env.scene_sources = []
 env.add_source_files(env.scene_sources, "*.cpp")
 
 # Chain load SCsubs
-SConscript("main/SCsub")
-SConscript("multiplayer/SCsub")
-SConscript("gui/SCsub")
+SConscript("main/SCsub", duplicate=0)
+SConscript("multiplayer/SCsub", duplicate=0)
+SConscript("gui/SCsub", duplicate=0)
 if not env["disable_3d"]:
-    SConscript("3d/SCsub")
-SConscript("2d/SCsub")
-SConscript("animation/SCsub")
-SConscript("audio/SCsub")
-SConscript("resources/SCsub")
-SConscript("debugger/SCsub")
+    SConscript("3d/SCsub", duplicate=0)
+SConscript("2d/SCsub", duplicate=0)
+SConscript("animation/SCsub", duplicate=0)
+SConscript("audio/SCsub", duplicate=0)
+SConscript("resources/SCsub", duplicate=0)
+SConscript("debugger/SCsub", duplicate=0)
 
 # Build it all as a library
 lib = env.add_library("scene", env.scene_sources)

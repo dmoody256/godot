@@ -51,5 +51,5 @@ def build(env_mono):
 
     targets = [os.path.join(nupkgs_dir, filename) for filename in target_filenames]
 
-    cmd = env_mono.CommandNoCache(targets, [], build_godot_net_sdk, module_dir=module_dir)
+    cmd = env_mono.Command(targets, [], build_godot_net_sdk, module_dir=module_dir)
     env_mono.AlwaysBuild(cmd)

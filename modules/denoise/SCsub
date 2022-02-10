@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-import resource_to_cpp
+import sys
+del sys.modules['modules']
+from modules.denoise import resource_to_cpp
 
 Import("env")
 Import("env_modules")
@@ -80,7 +82,7 @@ thirdparty_sources = [
     "common/thread.cpp",
     "common/tensor.cpp",
 ]
-thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+thirdparty_sources = ["oidn/" + file for file in thirdparty_sources]
 
 thirdparty_include_dirs = [
     "",
@@ -109,14 +111,15 @@ env_oidn.Append(
 
 env_thirdparty = env_oidn.Clone()
 env_thirdparty.disable_warnings()
+env_thirdparty.VariantDir("oidn", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 
-weights_in_path = thirdparty_dir + "weights/rtlightmap_hdr.tza"
-weights_out_path = thirdparty_dir + "weights/rtlightmap_hdr.gen.cpp"
+weights_in_path = "oidn/weights/rtlightmap_hdr.tza"
+weights_out_path = "oidn/weights/rtlightmap_hdr.gen.cpp"
 
 env_thirdparty.Depends(weights_out_path, weights_in_path)
-env_thirdparty.CommandNoCache(weights_out_path, weights_in_path, resource_to_cpp.tza_to_cpp)
+env_thirdparty.Command(weights_out_path, weights_in_path, resource_to_cpp.tza_to_cpp)
 
 # Godot source files
 

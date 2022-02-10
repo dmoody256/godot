@@ -45,7 +45,6 @@ def _helper_module(name, path):
 _helper_module("gles3_builders", "gles3_builders.py")
 _helper_module("glsl_builders", "glsl_builders.py")
 _helper_module("methods", "methods.py")
-_helper_module("platform_methods", "platform_methods.py")
 _helper_module("version", "version.py")
 _helper_module("core.core_builders", "core/core_builders.py")
 _helper_module("editor.editor_builders", "editor/editor_builders.py")
@@ -57,6 +56,9 @@ _helper_module("modules.modules_builders", "modules/modules_builders.py")
 import methods
 import glsl_builders
 import gles3_builders
+
+
+import SCons
 
 # Scan possible build platforms
 
@@ -95,8 +97,6 @@ for x in sorted(glob.glob("platform/*")):
     sys.path.remove(tmppath)
     sys.modules.pop("detect")
 
-methods.save_active_platforms(active_platforms, active_platform_ids)
-
 custom_tools = ["default"]
 
 platform_arg = ARGUMENTS.get("platform", ARGUMENTS.get("p", False))
@@ -116,6 +116,8 @@ env_base.PrependENVPath("PKG_CONFIG_PATH", os.getenv("PKG_CONFIG_PATH"))
 if "TERM" in os.environ:  # Used for colored output.
     env_base["ENV"]["TERM"] = os.environ["TERM"]
 
+env_base["active_platforms"] = {"names": active_platforms, "ids": active_platform_ids}
+
 env_base.disabled_modules = []
 env_base.module_version_string = ""
 env_base.msvc = False
@@ -130,8 +132,6 @@ env_base.__class__.use_windows_spawn_fix = methods.use_windows_spawn_fix
 env_base.__class__.add_shared_library = methods.add_shared_library
 env_base.__class__.add_library = methods.add_library
 env_base.__class__.add_program = methods.add_program
-env_base.__class__.CommandNoCache = methods.CommandNoCache
-env_base.__class__.Run = methods.Run
 env_base.__class__.disable_warnings = methods.disable_warnings
 env_base.__class__.force_optimization_on_debug = methods.force_optimization_on_debug
 env_base.__class__.module_check_dependencies = methods.module_check_dependencies
@@ -139,8 +139,6 @@ env_base.__class__.module_check_dependencies = methods.module_check_dependencies
 env_base["x86_libtheora_opt_gcc"] = False
 env_base["x86_libtheora_opt_vc"] = False
 
-# avoid issues when building with different versions of python out of the same directory
-env_base.SConsignFile(".sconsign{0}.dblite".format(pickle.HIGHEST_PROTOCOL))
 
 # Build options
 
@@ -166,6 +164,7 @@ opts.Add(EnumVariable("float", "Floating-point precision", "default", ("default"
 opts.Add(EnumVariable("optimize", "Optimization type", "speed", ("speed", "size", "none")))
 opts.Add(BoolVariable("production", "Set defaults to build Godot for use in production", False))
 opts.Add(BoolVariable("use_lto", "Use link-time optimization", False))
+opts.Add(PathVariable("build_dir", "Path to directory to build into", "build", PathVariable.PathIsDirCreate))
 
 # Components
 opts.Add(BoolVariable("deprecated", "Enable compatibility code for deprecated and removed features", True))
@@ -236,6 +235,10 @@ opts.Add("LINKFLAGS", "Custom flags for the linker")
 # Update the environment to have all above options defined
 # in following code (especially platform and custom_modules).
 opts.Update(env_base)
+
+
+# avoid issues when building with different versions of python out of the same directory
+env_base.SConsignFile(os.path.join(env_base["build_dir"], ".sconsign{0}.dblite".format(pickle.HIGHEST_PROTOCOL)))
 
 # Platform selection: validate input, and add options.
 
@@ -336,7 +339,8 @@ for name, path in modules_detected.items():
 
     opts.Add(BoolVariable("module_" + name + "_enabled", "Enable module '%s'" % (name,), enabled))
 
-methods.write_modules(modules_detected)
+env_base["modules"] = modules_detected
+
 
 # Update the environment again after all the module options are added.
 opts.Update(env_base)
@@ -700,8 +704,6 @@ if selected_platform in platform_list:
 
     env.module_list = modules_enabled
 
-    methods.update_version(env.module_version_string)
-
     env["PROGSUFFIX"] = suffix + env.module_version_string + env["PROGSUFFIX"]
     env["OBJSUFFIX"] = suffix + env["OBJSUFFIX"]
     # (SH)LIBSUFFIX will be used for our own built libraries
@@ -719,7 +721,7 @@ if selected_platform in platform_list:
 
     if env["tools"]:
         env.Append(CPPDEFINES=["TOOLS_ENABLED"])
-    methods.write_disabled_classes(env["disable_classes"].split(","))
+
     if env["disable_3d"]:
         if env["tools"]:
             print(
@@ -755,17 +757,16 @@ if selected_platform in platform_list:
 
     GLSL_BUILDERS = {
         "RD_GLSL": env.Builder(
-            action=env.Run(glsl_builders.build_rd_headers, 'Building RD_GLSL header: "$TARGET"'),
+            action=Action(glsl_builders.build_rd_header, 'Building RD_GLSL header: "$TARGET"'),
             suffix="glsl.gen.h",
             src_suffix=".glsl",
+            single_source=True,
         ),
         "GLSL_HEADER": env.Builder(
-            action=env.Run(glsl_builders.build_raw_headers, 'Building GLSL header: "$TARGET"'),
-            suffix="glsl.gen.h",
-            src_suffix=".glsl",
+            action=Action(glsl_builders.build_raw_header, 'Building GLSL header: "$TARGET"'), suffix="glsl.gen.h", src_suffix=".glsl", single_source=True
         ),
         "GLES3_GLSL": env.Builder(
-            action=env.Run(gles3_builders.build_gles3_headers, 'Building GLES3 GLSL header: "$TARGET"'),
+            action=Action(gles3_builders.build_gles3_headers, 'Building GLES3 GLSL header: "$TARGET"'),
             suffix="glsl.gen.h",
             src_suffix=".glsl",
         ),
@@ -781,35 +782,32 @@ if selected_platform in platform_list:
         env.vs_incs = []
         env.vs_srcs = []
 
+    # Check for the existence of headers
+    env["CONFIGURELOG"] = os.path.join(env["build_dir"], "config.log")
+    env["CONFIGUREDIR"] = os.path.join(env["build_dir"], "conf")
+    conf = Configure(env)
+    if "check_c_headers" in env:
+        for header in env["check_c_headers"]:
+            if conf.CheckCHeader(header[0]):
+                env.AppendUnique(CPPDEFINES=[header[1]])
+
+    env['CCACHE'] = 'ccache'
+    ccache = Tool('ccache')
+    if ccache.exists(env):
+        ccache.generate(env)
+
     Export("env")
-
+    env.Append(CPPPATH=[env.Dir(env["build_dir"])])
     # Build subdirs, the build order is dependent on link order.
-    SConscript("core/SCsub")
-    SConscript("servers/SCsub")
-    SConscript("scene/SCsub")
-    SConscript("editor/SCsub")
-    SConscript("drivers/SCsub")
-
-    SConscript("platform/SCsub")
-    SConscript("modules/SCsub")
-    if env["tests"]:
-        SConscript("tests/SCsub")
-    SConscript("main/SCsub")
-
-    SConscript("platform/" + selected_platform + "/SCsub")  # Build selected platform.
+    SConscript(
+        "SConscript", variant_dir=env["build_dir"], exports={"selected_platform": selected_platform}, duplicate=0
+    )
 
     # Microsoft Visual Studio Project Generation
     if env["vsproj"]:
         env["CPPPATH"] = [Dir(path) for path in env["CPPPATH"]]
         methods.generate_vs_project(env, GetOption("num_jobs"))
         methods.generate_cpp_hint_file("cpp.hint")
-
-    # Check for the existence of headers
-    conf = Configure(env)
-    if "check_c_headers" in env:
-        for header in env["check_c_headers"]:
-            if conf.CheckCHeader(header[0]):
-                env.AppendUnique(CPPDEFINES=[header[1]])
 
 elif selected_platform != "":
     if selected_platform == "list":
@@ -829,14 +827,8 @@ elif selected_platform != "":
     else:
         Exit(255)
 
-# The following only makes sense when the 'env' is defined, and assumes it is.
-if "env" in locals():
-    # FIXME: This method mixes both cosmetic progress stuff and cache handling...
-    methods.show_progress(env)
-    # TODO: replace this with `env.Dump(format="json")`
-    # once we start requiring SCons 4.0 as min version.
-    methods.dump(env)
-
+methods.show_progress(env)
+env.Dump(format="json")
 
 def print_elapsed_time():
     elapsed_time_sec = round(time.time() - time_at_start, 3)

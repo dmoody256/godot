@@ -59,7 +59,7 @@ if env["builtin_glslang"]:
     else:
         thirdparty_sources.append("glslang/OSDependent/Unix/ossource.cpp")
 
-    thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+    thirdparty_sources = ["glslang/" + file for file in thirdparty_sources]
 
     # Treat glslang headers as system headers to avoid raising warnings. Not supported on MSVC.
     # Include `#thirdparty` to workaround mismatch between location of `SPIRV` in library source
@@ -73,6 +73,7 @@ if env["builtin_glslang"]:
 
     env_thirdparty = env_glslang.Clone()
     env_thirdparty.disable_warnings()
+    env_thirdparty.VariantDir("glslang", env.Dir(thirdparty_dir), duplicate=0)
     env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
     env.modules_sources += thirdparty_obj
 

@@ -196,13 +196,18 @@ def configure_msvc(env, manual_msvc_config):
             env.Append(LINKFLAGS=["/OPT:REF"])
 
     elif env["target"] == "debug":
-        env.AppendUnique(CCFLAGS=["/Zi", "/FS", "/Od", "/EHsc"])
+        env.AppendUnique(CCFLAGS=["/FS", "/Od", "/EHsc"])
         # Allow big objects. Only needed for debug, see MinGW branch for rationale.
         env.AppendUnique(CCFLAGS=["/bigobj"])
+        env["PDB"] = os.path.join(env["build_dir"], "godot${PROGSUFFIX}.pdb")
+        env["CCPDBFLAGS"] = f"/Zi /Fd$PDB"
+        env.AppendUnique(CPPDEFINES=["DEBUG_ENABLED"])
         env.Append(LINKFLAGS=["/DEBUG"])
 
     if env["debug_symbols"]:
-        env.AppendUnique(CCFLAGS=["/Zi", "/FS"])
+        env.AppendUnique(CCFLAGS=["/FS"])
+        env["PDB"] = os.path.join(env["build_dir"], "godot${PROGSUFFIX}.pdb")
+        env["CCPDBFLAGS"] = f"/Zi /Fd$PDB"
         env.AppendUnique(LINKFLAGS=["/DEBUG"])
 
     if env["windows_subsystem"] == "gui":

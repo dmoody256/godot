@@ -50,8 +50,7 @@ thirdparty_sources = [
     "src/lib/sw_engine/tvgSwStroke.cpp",
     "src/savers/tvg/tvgTvgSaver.cpp",
 ]
-
-thirdparty_sources = [thirdparty_dir + file for file in thirdparty_sources]
+thirdparty_sources = ["nanosvg/" + file for file in thirdparty_sources]
 
 env_svg.Prepend(CPPPATH=[thirdparty_dir + "inc"])
 
@@ -69,6 +68,7 @@ env_thirdparty.Prepend(
         thirdparty_dir + "src/savers/tvg",
     ]
 )
+env_thirdparty.VariantDir("nanosvg", env.Dir(thirdparty_dir), duplicate=0)
 env_thirdparty.add_source_files(thirdparty_obj, thirdparty_sources)
 env.modules_sources += thirdparty_obj
 
